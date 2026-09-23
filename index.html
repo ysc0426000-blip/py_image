@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本機圖片辨識系統</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>🔍 本機圖片辨識系統</h1>
+  <div class="topbar-right">
+    <div id="indexStatus" class="index-status">準備中...</div>
+    <button id="rebuildBtn" class="btn small">重建索引</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="upload">📁 上傳圖片</button>
+    <button class="tab-btn" data-tab="camera">📷 相機拍照</button>
+    <button class="tab-btn" data-tab="voice">🎤 語音查詢</button>
+  </nav>
+
+  <section id="tab-upload" class="tab-panel active">
+    <p class="hint">選擇一張圖片，系統會在本機資料庫中找出視覺上最相似的圖片。</p>
+    <input type="file" id="uploadInput" accept="image/*">
+    <div class="preview-box">
+      <img id="uploadPreview" class="preview-img" hidden>
+    </div>
+  </section>
+
+  <section id="tab-camera" class="tab-panel">
+    <p class="hint">開啟相機拍下物品照片，系統會找出最相似的圖片。</p>
+    <div class="camera-box">
+      <video id="cameraVideo" autoplay playsinline></video>
+      <canvas id="cameraCanvas" hidden></canvas>
+    </div>
+    <div class="btn-row">
+      <button id="cameraStartBtn" class="btn">啟動相機</button>
+      <button id="cameraShotBtn" class="btn primary" disabled>拍照並查詢</button>
+    </div>
+    <div class="preview-box">
+      <img id="cameraPreview" class="preview-img" hidden>
+    </div>
+  </section>
+
+  <section id="tab-voice" class="tab-panel">
+    <p class="hint">按下麥克風說出想找的物品（例如：「螺絲」、「狗」、「鋸片」、「汽車」），或直接輸入文字查詢。</p>
+    <div class="btn-row">
+      <button id="voiceBtn" class="btn primary">🎤 開始語音查詢</button>
+      <span id="voiceStatus" class="voice-status"></span>
+    </div>
+    <div class="text-fallback">
+      <input type="text" id="voiceTextInput" placeholder="或直接輸入關鍵字，例如：螺絲、狗、鋸片、汽車…">
+      <button id="voiceTextBtn" class="btn">查詢</button>
+    </div>
+    <div id="voiceTranscript" class="transcript" hidden></div>
+  </section>
+
+  <section class="results-section">
+    <h2>查詢結果</h2>
+    <div id="resultsGrid" class="results-grid"></div>
+    <p id="noResults" class="no-results" hidden>查無相似或符合的圖片，請換一張照片或不同的關鍵字再試一次。</p>
+  </section>
+
+</main>
+
+<script src="vendor/tf.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# 這些是本機開發/文件用的檔案，不需要放進部署用的 nginx 映像檔
+.git
+.gitignore
+server.ps1
+start.bat
+generate_images_json.ps1
+CLAUDE.md
+SKILL.md
+Dockerfile
+*.docx
+*.pptx
