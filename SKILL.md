@@ -61,4 +61,27 @@ metadata:
 - 語音辨識會透過瀏覽器內建功能連到雲端做語音轉文字（不是 100% 離線），但圖片比對本身完全在本機運算，不會把任何圖片上傳到任何地方。
 - 這是給單一使用者在自己電腦上用的工具，沒有帳號/多人協作機制。
 
+## 六、線上版本（GitHub Pages）
+
+- 網址：https://ysc0426000-blip.github.io/py_image/ （手機/平板/任何裝置只要有瀏覽器都能開，不需要先啟動本機伺服器）
+- GitHub repo：https://github.com/ysc0426000-blip/py_image （public）
+
+**要更新線上版本時（改了程式碼或新增/刪除了圖片之後）：**
+
+1. 在 PowerShell 切到專案資料夾，先執行：
+   ```powershell
+   .\generate_images_json.ps1
+   ```
+   這會重新產生 `images.json`（線上版本讀圖片清單用的靜態檔案，跟本機的 `/api/images` 是分開的兩條路，忘記跑這步的話，線上版本不會看到新加的圖片）。
+2. 接著執行（PATH 裡如果還找不到 `git`，先執行第一行把 Git 加進當次 PowerShell 的 PATH）：
+   ```powershell
+   $env:Path = "C:\Program Files\Git\cmd;C:\Program Files\Git\bin;C:\Program Files\GitHub CLI;" + $env:Path
+   git add -A
+   git commit -m "描述這次改了什麼"
+   git push
+   ```
+3. push 之後 GitHub Pages 會自動重新建置，大約 30 秒到 1 分鐘後 https://ysc0426000-blip.github.io/py_image/ 就會是最新版本（可以到 repo 的 Actions 分頁或 `Settings > Pages` 看建置狀態）。
+
+**注意**：這個 repo 是 public 的（GitHub 免費方案的 Pages 只能從 public repo 發佈），所以任何人都能看到原始碼和 `vendor/` 裡的模型檔、以及所有圖片。如果之後有不想公開的圖片，不要放進這個資料夾。
+
 更完整的技術架構說明請見同資料夾的 `CLAUDE.md`。

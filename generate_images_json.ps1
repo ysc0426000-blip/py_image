@@ -1,5 +1,5 @@
 ﻿# 產生 images.json 靜態清單
-# 用途：雲端部署（例如 Zeabur）沒有 server.ps1 可以動態掃描資料夾，
+# 用途：雲端部署（GitHub Pages）是純靜態網站，沒有 server.ps1 可以動態掃描資料夾，
 #      所以部署前要跑這支腳本，把目前資料夾內的圖片清單「烘焙」成靜態的 images.json，
 #      app.js 在偵測不到 /api/images 動態端點時會自動改讀這個檔案。
 #
@@ -28,7 +28,9 @@ if ($filesArray.Count -eq 0) {
 }
 
 $outPath = Join-Path $root "images.json"
-[System.IO.File]::WriteAllText($outPath, $json, [System.Text.Encoding]::UTF8)
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($outPath, $json, $utf8NoBom)
 
 Write-Host "已寫入 images.json，共 $($filesArray.Count) 張圖片。" -ForegroundColor Green
+
 

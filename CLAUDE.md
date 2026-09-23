@@ -27,12 +27,16 @@
 ├── app.js              # 前端邏輯：模型載入、索引建立、三種查詢方式
 ├── style.css            # 樣式
 ├── tags.json             # 每張圖片的中文關鍵字（供語音/文字查詢比對）
+├── images.json           # 靜態圖片清單（給 GitHub Pages 等純靜態部署用，見下方「部署」章節）
 ├── server.ps1           # 本機靜態網頁伺服器（HttpListener），含 /api/images 動態端點
 ├── start.bat            # 雙擊即可啟動伺服器並開啟瀏覽器
+├── generate_images_json.ps1  # 部署前執行，重新產生 images.json
 ├── vendor/
 │   ├── tf.min.js                      # TensorFlow.js（本機端，離線）
 │   └── mobilenet_v1_1.0_224/          # 本機端 MobileNet v1 權重（55 個 shard + model.json，約 17MB）
 ├── A001_1.jpg ... E003_1.jpg          # 圖片資料庫（現有 15 張，5 類 × 3 項）
+├── .nojekyll             # 告訴 GitHub Pages 不要用 Jekyll 處理這個靜態網站
+├── .gitignore            # 排除跟本系統無關的課程教材（22.docx、pptx、AI_17 子資料夾）
 ├── CLAUDE.md            # 本檔案
 └── SKILL.md             # 操作手冊
 ```
@@ -49,7 +53,7 @@
 | D001–D003 | 鋸片（粗齒圓鋸片、精密細齒鋸片、迷你鋸片） |
 | E001–E003 | 汽車（Honda HR-V、Tesla Model S、Toyota RAV4） |
 
-新增圖片時只要把 `.jpg/.jpeg/.png/.webp` 檔放進本資料夾根目錄即可，`server.ps1` 的 `/api/images` 端點會自動掃描到。若要讓語音/文字查詢也認得新圖片，需在 `tags.json` 補上對應的中文關鍵字（否則系統會退回用檔名本身當關鍵字）。
+新增圖片時只要把 `.jpg/.jpeg/.png/.webp` 檔放進本資料夾根目錄即可，`server.ps1` 的 `/api/images` 端點會自動掃描到。若要讓語音/文字查詢也認得新圖片，需在 `tags.json` 補上對應的中文關鍵字（否則系統會退回用檔名本身當關鍵字）。部署到 GitHub Pages 前記得跑 `generate_images_json.ps1` 重新產生 `images.json`（見下方「部署」章節），否則雲端版本看不到新圖片。
 
 ## 視覺相似度查詢（上傳圖片 / 相機拍照）
 
@@ -70,6 +74,21 @@
 不行。瀏覽器的相機（`getUserMedia`）與麥克風權限要求「安全來源」（https 或 localhost），用 `file://` 直接開啟 HTML 檔案通常會被瀏覽器擋下相機/麥克風權限。`server.ps1` 用 `http://localhost:8787` 提供服務，滿足這個要求，同時也讓 `fetch()` 讀取 `tags.json`、`/api/images`、模型檔案時不會遇到 `file://` 的 CORS 限制。
 
 `server.ps1` 存成 UTF-8 with BOM 編碼——若未來要修改這支腳本，請務必保留 BOM，否則 Windows PowerShell 5.1 會因為看到 UTF-8 但當作系統內碼（Big5/ANSI）解析，把腳本內的中文字串解析壞掉，導致 `Unexpected token '}'` 之類的語法錯誤（開發時已實際踩過這個坑）。
+
+## 部署（GitHub + GitHub Pages）
+
+- **GitHub repo**：https://github.com/ysc0426000-blip/py_image （public，因為 GitHub 免費方案的 Pages 只能從 public repo 發佈）
+- **線上網址**：https://ysc0426000-blip.github.io/py_image/
+- 這是純靜態網站（HTML/CSS/JS + TensorFlow.js 模型檔 + 圖片），所以直接用 GitHub Pages 發佈，不需要另外的後端主機。曾經評估過用 Zeabur（Docker/nginx）部署，但使用者後來決定改用 GitHub Pages，所以拿掉了當時寫的 `Dockerfile` / `nginx.conf`。
+- **關鍵差異**：GitHub Pages 沒有 `server.ps1` 那種動態伺服器，所以 `/api/images` 端點不存在。`app.js` 的 `fetchImageList()` 會先嘗試 `/api/images`，抓不到就自動改讀部署時一起發佈的靜態 `images.json`。因此**每次新增/刪除圖片後、要 push 之前，一定要重新執行 `generate_images_json.ps1`**，否則雲端版本的圖片清單會跟資料夾實際內容不一致。
+- 本機開發環境原本沒有 git / GitHub CLI / Node.js，是這次部署時用 `winget` 安裝的（`Git.Git`、`GitHub.cli`、`OpenJS.NodeJS.LTS`）。Node.js 是為了跑 Zeabur CLI（`npx zeabur@latest`）才裝的，後來改走 GitHub Pages 就沒再用到，但留著也無妨。
+- 部署流程（之後有更新要重新發佈時）：
+  1. 改完程式碼、圖片後，跑 `generate_images_json.ps1` 更新 `images.json`
+  2. `git add -A`
+  3. `git commit -m "說明這次改了什麼"`
+  4. `git push`（GitHub Pages 設定成從 `main` 分支 `/`（root）自動建置，push 後大約 30 秒到 1 分鐘會自動更新線上版本）
+- GitHub Pages 是公開網站，任何人都能連進去用（也能看到原始碼，包括 `vendor/` 內的模型檔）。如果之後不想公開，需要改用其他支援 private repo 的靜態託管服務（例如 Cloudflare Pages），因為 GitHub 免費方案的 Pages 不支援從 private repo 發佈。
+- 因為部署目標網址是 `https://ysc0426000-blip.github.io/py_image/`（有子路徑 `/py_image/`），`index.html`/`app.js` 裡引用檔案都刻意使用**相對路徑**（例如 `vendor/tf.min.js` 而不是 `/vendor/tf.min.js`），這樣不管部署在網域根目錄還是子路徑都能正常運作。之後若新增檔案引用，也要維持這個慣例，不要加開頭的 `/`。
 
 ## 已知限制 / 未來可改進方向
 
