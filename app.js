@@ -207,6 +207,15 @@ function tagsFor(name) {
   return state.tagsMap[name] || [name.replace(/\.[^.]+$/, "")];
 }
 
+function imageSrcFor(name) {
+  // 加上跟建索引時相同的快取破壞參數，避免瀏覽器沿用先前（可能是 404）的快取結果
+  const fromIndex = state.index[name];
+  if (fromIndex && fromIndex.mtime) return name + "?v=" + fromIndex.mtime;
+  const fromList = state.images.find((i) => i.name === name);
+  if (fromList && fromList.mtime) return name + "?v=" + fromList.mtime;
+  return name;
+}
+
 function searchByText(query) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -247,8 +256,15 @@ function renderResults(results, options) {
     card.className = "result-card" + (i === 0 ? " rank-1" : "");
 
     const img = document.createElement("img");
-    img.src = r.name;
     img.alt = r.name;
+    img.onerror = () => {
+      // 極端情況下（例如快取問題）仍載入失敗，就退回不加參數的原始路徑再試一次
+      if (img.src.indexOf("?v=") !== -1) {
+        img.onerror = null;
+        img.src = r.name;
+      }
+    };
+    img.src = imageSrcFor(r.name);
 
     const meta = document.createElement("div");
     meta.className = "meta";
